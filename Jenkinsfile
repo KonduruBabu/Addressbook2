@@ -1,54 +1,37 @@
 pipeline {
     agent any
-    
-    tools {
-        maven 'M2_HOME'
-        terraform 'Terraform-1.3.7'
-    }
-    environment {
-        AWS_ACCESS_KEY_ID = '${Access_Key}'
-        AWS_SECRET_KEY = '${Secret_Key}'
-        }
 
     stages {
         stage('Checkout') {
             steps {
-            checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/devopscbabu/DevOpsAddressBook.git']]])
+                git branch: 'master', url: 'https://github.com/KonduruBabu/Addressbook2'
             }
         }
+
         stage('Compile') {
             steps {
-            sh 'mvn clean package'
+                sh 'mvn clean compile'
             }
-        }  
-        stage('Docker Build') {
+        }
+
+        stage('Test') {
             steps {
-                sh 'docker build -t cbabu85/devopsaddressbook .'
+                sh 'mvn test'
             }
         }
-        stage('Docker Push') {
-            steps { 
-                withCredentials([string(credentialsId: 'docker-hub', variable: 'dockerHubPwd')]) {
-                sh 'docker login -u cbabu85 -p ${dockerHubPwd}'
-                  }
-                sh 'docker push cbabu85/devopsaddressbook'
-                  }                                     
-             }
-         stage('Terraform init') {
-             steps {
-                 sh 'terraform init'
-             }
-         }
-         stage('Terraform Apply') {
-             steps {
-                 sh 'terraform apply --auto-approve'
-                 sleep 20
-             }
-         }
-        stage('Docker Deploy using Ansible') {
-             steps {
-                 ansiblePlaybook credentialsId: 'terraform-docker', disableHostKeyChecking: true, installation: 'ansible', inventory: 'dev.inv', playbook: 'deploy-docker.yml'
-             }
+
+        stage('Package') {
+            steps {
+                sh 'mvn package'
+            }
         }
-     }
+
+        stage('Deploy') {
+            steps {
+                // Install Tomcat9 on the Jenkins server or a separate server
+                // Deploy the packaged application (WAR file) to Tomcat9
+                // Verify the application deployment using a browser
+            }
+        }
+    }
 }
