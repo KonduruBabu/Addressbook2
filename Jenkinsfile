@@ -1,36 +1,39 @@
 pipeline {
     agent any
-
     stages {
-        stage('Checkout') {
+        stage('checkout') {
             steps {
-                git branch: 'master', url: 'https://github.com/KonduruBabu/Addressbook2'
+                git url:'https://github.com/KonduruBabu/Addressbook2', branch: "master"
             }
         }
-
-        stage('Compile') {
+        stage('Build') {
             steps {
-                sh 'mvn clean compile'
+               sh "mvn clean package"
             }
         }
-
-        stage('Test') {
+       
+        stage('Build Image') {
             steps {
-                sh 'mvn test'
+                sh 'docker build -t babuimg .'
+                sh 'docker tag babuimg:latest KonduruBabu/Addressbook2:latest'
             }
         }
-
-        stage('Package') {
+        stage('Docker login') {
             steps {
-                sh 'mvn package'
+                withCredentials([usernamePassword(credentialsId: 'dockercred', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                    sh "echo $PASS | docker login -u $USER --password-stdin"
+                    sh 'docker push babukonduru/imgaddbook:latest'
+                }
             }
         }
-
         stage('Deploy') {
             steps {
-                // Install Tomcat9 on the Jenkins server or a separate server
-                // Deploy the packaged application (WAR file) to Tomcat9
-                // Verify the application deployment using a browser
+                script {
+                    def dockerCmd = 'docker run -itd --name My-first-containe211 -p 80:8082 babukonduru/imgaddbook:latest'
+                    sshagent(['sshkeypair']) {
+                        sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.40.25 ${dockerCmd}"
+                    }
+                }
             }
         }
     }
