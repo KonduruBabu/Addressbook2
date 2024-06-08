@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('checkout') {
             steps {
-                git url:'https://github.com/KonduruBabu/Addressbook2', branch: "master"
+                git url:'https://github.com/KonduruBabu/Addressbook2.git/', branch: "master"
             }
         }
         stage('Build') {
@@ -14,8 +14,8 @@ pipeline {
        
         stage('Build Image') {
             steps {
-                sh 'docker build -t babuimg .'
-                sh 'docker tag babuimg:latest KonduruBabu/Addressbook2:latest'
+                sh 'docker build -t babukonduru/imgaddbook:latest .'
+                sh 'docker image'
             }
         }
         stage('Docker login') {
